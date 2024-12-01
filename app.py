@@ -1,9 +1,10 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from simulated import *
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 if __name__ == '__main__':
-    def calculate_cohorts():
+    def calculate_cohorts(modified=False):
 
         female_prop = float(female_entry.get())
         male_prop = float(male_entry.get())
@@ -30,11 +31,12 @@ if __name__ == '__main__':
 
         df = create_data(total_students)
         df = enrollment_without_parity(df, gender_enrollment_rates, race_enrollment_rates, students_to_admit)
-        plot_parity(df)
-
-        df2 = create_data2(total_students)
-        df2 = enrollment_with_parity(df, df2, gender_enrollment_rates, race_enrollment_rates, students_to_admit)
-        plot_parity(df2)
+        if not modified:
+            plot_parity(df, plot_frame1, plot_frame2)
+        else:
+            df2 = create_data2(total_students)
+            df2 = enrollment_with_parity(df, df2, gender_enrollment_rates, race_enrollment_rates, students_to_admit)
+            plot_parity(df2, plot_frame1, plot_frame2)
         
     
     # GUI setup
@@ -86,16 +88,26 @@ if __name__ == '__main__':
     admit_students_entry = ttk.Entry(input_frame, width=10)
     admit_students_entry.grid(row=10, column=1)
 
-    # Calculate button
-    calculate_button = ttk.Button(input_frame, text="Calculate Cohorts", command=calculate_cohorts)
-    calculate_button.grid(row=11, column=0, columnspan=2, pady=10)
+    # Buttons for calculations
+    calculate_unmodified_button = ttk.Button(
+        input_frame, text="Calculate (Unmodified)", command=lambda: calculate_cohorts(modified=False)
+    )
+    calculate_unmodified_button.grid(row=11, column=0, pady=10)
 
-    # Output frame
-    output_frame = ttk.Frame(root, padding="10")
-    output_frame.grid(row=1, column=0, sticky="W")
+    calculate_modified_button = ttk.Button(
+        input_frame, text="Calculate (Modified)", command=lambda: calculate_cohorts(modified=True)
+    )
+    calculate_modified_button.grid(row=12, column=1, pady=10)
 
-    output_label = ttk.Label(output_frame, text="Results will appear here.", wraplength=400, justify="left")
-    output_label.grid(row=0, column=0, sticky="W")
+    # Plot frame
+    plot_frame1 = ttk.Frame(root, padding="10")
+    plot_frame1.grid(row=1, column=0, sticky="W")
+
+    plot_frame2 = ttk.Frame(root, padding="10")
+    plot_frame2.grid(row=2, column=0, sticky="W")
+
+    # output_label = ttk.Label(output_frame, text="Results will appear here.", wraplength=400, justify="left")
+    # output_label.grid(row=0, column=0, sticky="W")
 
     # Run the app
     root.mainloop()

@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import tkinter as tk
+from tkinter import ttk, messagebox
+
 
 RACE_RATIOS = {
         'White': 0.5784,
@@ -126,7 +130,7 @@ def bootstrap_enrollment_rates(df, group_column, num_iterations=100):
 
     return rates
 
-def plot_parity(df):
+def plot_parity(df, plot_frame1, plot_frame2):
     # Calculate confidence intervals for gender enrollment rates
     cis = bootstrap_enrollment_rates(df, "gender")
     male_ci = cis["Male"]
@@ -144,19 +148,23 @@ def plot_parity(df):
         'Upper CI': [female_ci[2], male_ci[2]]
     })
 
+    for widget in plot_frame1.winfo_children():
+        widget.destroy()
+
     # Visualization for gender
-    plt.figure(figsize=(8, 6))
-    sns.barplot(data=enrollment_ci_gender_df, x='Gender', y='Enrollment Rate', color='blue', alpha=0.6, ci=None)
-    plt.errorbar(x=enrollment_ci_gender_df['Gender'], y=enrollment_ci_gender_df['Enrollment Rate'],
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    sns.barplot(data=enrollment_ci_gender_df, x='Gender', y='Enrollment Rate', color='blue', alpha=0.6, ci=None, ax=ax1)
+    ax1.errorbar(x=enrollment_ci_gender_df['Gender'], y=enrollment_ci_gender_df['Enrollment Rate'],
                 yerr=[enrollment_ci_gender_df['Enrollment Rate'] - enrollment_ci_gender_df['Lower CI'],
                         enrollment_ci_gender_df['Upper CI'] - enrollment_ci_gender_df['Enrollment Rate']],
                 fmt='none', c='black', capsize=5)
-    plt.title('Gender Enrollment Rates with 95% Confidence Intervals')
-    plt.xlabel('Gender')
-    plt.ylabel('Enrollment Rate')
-    plt.axhline(0, color='red', linestyle='--', linewidth=1)
-    plt.tight_layout()
-    plt.show()
+    ax1.set_title('Gender Enrollment Rates with 95% Confidence Intervals')
+    ax1.set_xlabel('Gender')
+    ax1.set_ylabel('Enrollment Rate')
+    ax1.axhline(0, color='red', linestyle='--', linewidth=1)
+    # ax1.tight_layout()
+    # plt.show()
 
     # Output the enrollment parity for gender
     print(f'Enrollment Parity (Male/Female): {enrollment_parity_gender:.2f}')
@@ -184,19 +192,28 @@ def plot_parity(df):
     enrollment_ci_race_df.columns = ['Race', 'Enrollment Rate', 'Lower CI', 'Upper CI', 'Enrollment Parity vs White']
 
     # Visualization for racial groups
-    plt.figure(figsize=(10, 6))
-    sns.barplot(data=enrollment_ci_race_df, x='Race', y='Enrollment Rate', color='blue', alpha=0.6, ci=None)
-    plt.errorbar(x=enrollment_ci_race_df['Race'], y=enrollment_ci_race_df['Enrollment Rate'],
+    ax2 = fig.add_subplot(212)
+    sns.barplot(data=enrollment_ci_race_df, x='Race', y='Enrollment Rate', color='blue', alpha=0.6, ci=None, ax=ax2)
+    ax2.errorbar(x=enrollment_ci_race_df['Race'], y=enrollment_ci_race_df['Enrollment Rate'],
                 yerr=[enrollment_ci_race_df['Enrollment Rate'] - enrollment_ci_race_df['Lower CI'],
                         enrollment_ci_race_df['Upper CI'] - enrollment_ci_race_df['Enrollment Rate']],
                 fmt='none', c='black', capsize=5)
-    plt.title('Racial Enrollment Rates with 95% Confidence Intervals')
-    plt.xlabel('Race')
-    plt.ylabel('Enrollment Rate')
-    plt.axhline(0, color='red', linestyle='--', linewidth=1)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+    ax2.set_title('Racial Enrollment Rates with 95% Confidence Intervals')
+    ax2.set_xlabel('Race')
+    ax2.set_ylabel('Enrollment Rate')
+    ax2.axhline(0, color='red', linestyle='--', linewidth=1)
+    # ax2.set_xticks(rotation=45)
+    # ax2.tight_layout()
+    # plt.show()
+
+    fig.tight_layout()
+
+    for widget in plot_frame1.winfo_children():
+        widget.destroy()
+
+    canvas = FigureCanvasTkAgg(fig, master=plot_frame1)
+    canvas.draw()
+    canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
 
     # Assuming 'parity_results' is already defined and contains the enrollment parity results
     parity_values = []
