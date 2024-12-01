@@ -1,21 +1,22 @@
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
-def create_data(num_students, white, black, asian, hispanic):
-    # Define the population ratios
-    race_ratios = {
-        'White': white,
-        'Black': black,
-        'Asian': asian,
-        'Hispanic': hispanic,
-        'Other': 1 -  white - black - asian - hispanic
+RACE_RATIOS = {
+        'White': 0.5784,
+        'Black': 0.1205,
+        'Asian': 0.0592,
+        'Hispanic': 0.1873,
+        'Other': 1 - 0.5784 - 0.1205 - 0.0592 - 0.1873
     }
 
+def create_data(num_students):
     # Generate the race column based on the defined ratios
     race_population = np.random.choice(
-        list(race_ratios.keys()),
+        list(RACE_RATIOS.keys()),
         size=num_students,
-        p=list(race_ratios.values())
+        p=list(RACE_RATIOS.values())
     )
 
     # Create the DataFrame
@@ -40,9 +41,9 @@ def create_data(num_students, white, black, asian, hispanic):
     return df
 
 
-def admit_students(df, race_ratios, target_admits = 1000):
+def admit_students(df, target_admits = 1000):
     # Calculate number of admits needed for each race
-    admits_by_race = {race: int(target_admits * ratio) for race, ratio in race_ratios.items()}
+    admits_by_race = {race: int(target_admits * ratio) for race, ratio in RACE_RATIOS.items()}
 
     # Create a list to hold selected students
     selected_students = []
@@ -79,10 +80,9 @@ def admit_students(df, race_ratios, target_admits = 1000):
 
     return admitted_df
 
-def enrollment_without_parity(df, race_ratios, gender_enrollment_rates, race_enrollment_rates):
-    # Execute the admission function
-    admitted_students = admit_students(df, race_ratios)
+def enrollment_without_parity(df, gender_enrollment_rates, race_enrollment_rates, target_admits):
 
+    admitted_students = admit_students(df, target_admits)
     # Initialize the enrollment column
     admitted_students['enrollment'] = 0.0
 
@@ -216,8 +216,7 @@ def plot_parity(df):
     else:
         print('No non-White groups to calculate average enrollment parity.')
 
-def bootstrap_for_parity(df, race_ratios):
-    admitted_students = admit_students(df, race_ratios)
+def bootstrap_for_parity(admitted_students):
 
     # Number of bootstrap samples
     n_iterations = 100
@@ -232,7 +231,7 @@ def bootstrap_for_parity(df, race_ratios):
     # Combine bootstrap samples into a single DataFrame
     return pd.concat(bootstrap_samples)
 
-def compute_conditional_probabilities(bootstrapped_data):
+def compute_conditional_probabilities(bootstrapped_data, admitted_students):
     conditional_probabilities = []
     for race in admitted_students["race"].unique():
         # Calculate gender conditional probability for each race
@@ -244,7 +243,7 @@ def compute_conditional_probabilities(bootstrapped_data):
 
     return pd.concat(conditional_probabilities, axis=1).mean(axis=1)
 
-def compute_race_conditional_probabilities(bootstrapped_data):
+def compute_race_conditional_probabilities(bootstrapped_data, admitted_students):
     conditional_probabilities = []
     for gender in admitted_students["gender"].unique():
         # Calculate race conditional probability for each gender
@@ -256,12 +255,12 @@ def compute_race_conditional_probabilities(bootstrapped_data):
 
     return pd.concat(conditional_probabilities, axis=1).mean(axis=1)
 
-def create_data2(num_students, race_ratios):
+def create_data2(num_students):
     # Generate the race column based on the defined ratios
     race_population = np.random.choice(
-        list(race_ratios.keys()),
+        list(RACE_RATIOS.keys()),
         size=num_students,
-        p=list(race_ratios.values())
+        p=list(RACE_RATIOS.values())
     )
 
     # Create the DataFrame
@@ -321,24 +320,24 @@ def admit_students_2(df, race_ratios_adjusted,gender_ratios_adjusted, target_adm
 
     return admitted_df
 
-def enrollment_with_parity(num_students, df, race_ratios, gender_enrollment_rates, race_enrollment_rates):
-    bootstrapped_joint_distribution = bootstrap_for_parity(df, race_ratios)
+def enrollment_with_parity(df, df2, gender_enrollment_rates, race_enrollment_rates, target_admits):
+    admitted_students = admit_students(df, target_admits)
+    bootstrapped_joint_distribution = bootstrap_for_parity(admitted_students)
     # Compute the mean conditional probabilities for gender using bootstrapped samples
-    gender_enrollment_prob = compute_conditional_probabilities(bootstrapped_joint_distribution)
+    gender_enrollment_prob = compute_conditional_probabilities(bootstrapped_joint_distribution, admitted_students)
 
     # Fix the calculation to ensure sum is done correctly
     total_prob = sum(gender_enrollment_prob)
     gender_enrollment_prob_fixed = {k: 1 / v / total_prob for k, v in gender_enrollment_prob.items()}
     # Compute the mean conditional probabilities for race using bootstrapped samples
-    race_enrollment_prob = compute_race_conditional_probabilities(bootstrapped_joint_distribution)
+    race_enrollment_prob = compute_race_conditional_probabilities(bootstrapped_joint_distribution, admitted_students)
 
     # Fix the calculation for race enrollment probabilities
     total_race_prob = sum(race_enrollment_prob)
-    race_enrollment_prob_fixed = {k: race_ratios[k] / v / total_race_prob for k, v in race_enrollment_prob.items()}
+    race_enrollment_prob_fixed = {k: RACE_RATIOS[k] / v / total_race_prob for k, v in race_enrollment_prob.items()}
     race_enrollment_prob_fixed_final = {k: v / sum(race_enrollment_prob_fixed.values()) for k, v in race_enrollment_prob_fixed.items()}
 
-    df2 = create_data2(num_students, race_ratios)
-    admitted_students2 = admit_students_2(df2, race_enrollment_prob_fixed_final,gender_enrollment_prob_fixed)
+    admitted_students2 = admit_students_2(df2, race_enrollment_prob_fixed_final,gender_enrollment_prob_fixed, target_admits)
     # Initialize the enrollment column
     admitted_students2['enrollment'] = 0.0
 
@@ -361,69 +360,3 @@ def enrollment_with_parity(num_students, df, race_ratios, gender_enrollment_rate
     df2.loc[admitted_students2.index, "enrollment"] = admitted_students2["enrollment"]
     return df2
         
-
-if __name__ == '__main__':
-    # Execute the admission function
-    admitted_students = admit_students(df, race_ratios)
-    df["admission"] = 0
-
-    df.loc[admitted_students.index, "admission"] = 1
-    # Output the results
-    print(f'Total admitted students: {len(admitted_students)}')
-    print(admitted_students['gender'].value_counts())
-    print(admitted_students['race'].value_counts())
-
-    # assumed enrollment rates for gender and race
-gender_enrollment_rates = {
-    'Male': 0.9,
-    'Female': 0.8,
-}
-
-race_enrollment_rates = {
-    'White': 0.9,
-    'Black': 0.7,
-    'Asian': 0.7,
-    'Hispanic': 0.7,
-    'Other': 0.7,
-}
-
-# Initialize the enrollment column
-admitted_students['enrollment'] = 0.0
-
-# Assign enrollment probabilities based on gender and race
-for index, row in admitted_students.iterrows():
-    gender = row['gender']
-    race = row['race']
-    gender_prob = gender_enrollment_rates[gender]
-    race_prob = race_enrollment_rates[race]
-
-    # Calculate the combined probability assuming independence
-    combined_prob = gender_prob * race_prob
-
-    # Assign enrollment status based on combined probability
-    admitted_students.at[index, 'enrollment'] = 1 if np.random.rand() < combined_prob else 0
-
-    # Output the results
-    print(f'Total admitted students: {len(admitted_students)}')
-    print(f'Total enrolled students: {len(admitted_students[admitted_students["enrollment"] == 1])}')
-    male_enrollment_rate = admitted_students[admitted_students["gender"] == "Male"]["enrollment"].sum()/df[df["gender"] == "Male"]["student_id"].count()
-    female_enrollment_rate = admitted_students[admitted_students["gender"] == "Female"]["enrollment"].sum()/ df[df["gender"] == "Female"]["student_id"].count()
-    print(f'Enrollment rate for males: {male_enrollment_rate}')
-    print(f'Enrollment rate for females: {female_enrollment_rate }')
-    print(f'Enrollment rate gender disproportion: {1-female_enrollment_rate/male_enrollment_rate }')
-
-    race_enrollment_count = admitted_students[admitted_students["race"] == 'White']["enrollment"].sum()
-    total_race_students = df[df["race"] == 'White']["student_id"].count()
-    baseline_race_enrollment_rate = race_enrollment_count / total_race_students
-    print(f'Enrollment rate for White: {baseline_race_enrollment_rate}')
-    race_dispro = []
-    # Calculate and print enrollment rates by race
-    for race in race_enrollment_rates.keys():
-        race_enrollment_count = admitted_students[admitted_students["race"] == race]["enrollment"].sum()
-        total_race_students = df[df["race"] == race]["student_id"].count()
-        race_enrollment_rate = race_enrollment_count / total_race_students
-        if race != "White":
-                enrollment_disproportion = 1- race_enrollment_rate / baseline_race_enrollment_rate
-                race_dispro.append(enrollment_disproportion)
-
-    print(f'Ang Enrollment rate racial disproportion: {sum(race_dispro)/len(race_dispro)}')

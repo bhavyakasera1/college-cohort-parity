@@ -1,16 +1,41 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from simulated import *
 
 if __name__ == '__main__':
     def calculate_cohorts():
+
         female_prop = float(female_entry.get())
         male_prop = float(male_entry.get())
         white_prop = float(white_entry.get())
         black_prop = float(black_entry.get())
         asian_prop = float(asian_entry.get())
         hispanic_prop = float(hispanic_entry.get())
+        other_prop = float(other_entry.get())
         total_students = int(total_students_entry.get())
         students_to_admit = int(admit_students_entry.get())
+
+        gender_enrollment_rates = {
+            'Male':male_prop,
+            'Female':female_prop
+        }
+
+        race_enrollment_rates = {
+            'White':white_prop,
+            'Black':black_prop,
+            'Asian':asian_prop,
+            'Hispanic':hispanic_prop,
+            'Other':other_prop
+        }
+
+        df = create_data(total_students)
+        df = enrollment_without_parity(df, gender_enrollment_rates, race_enrollment_rates, students_to_admit)
+        plot_parity(df)
+
+        df2 = create_data2(total_students)
+        df2 = enrollment_with_parity(df, df2, gender_enrollment_rates, race_enrollment_rates, students_to_admit)
+        plot_parity(df2)
+        
     
     # GUI setup
     root = tk.Tk()
@@ -21,7 +46,7 @@ if __name__ == '__main__':
     input_frame.grid(row=0, column=0, sticky="W")
 
     # Gender inputs
-    ttk.Label(input_frame, text="Gender Proportions:").grid(row=0, column=0, sticky="W")
+    ttk.Label(input_frame, text="Gender Enrollment Rates:").grid(row=0, column=0, sticky="W")
     ttk.Label(input_frame, text="Female:").grid(row=1, column=0, sticky="W")
     female_entry = ttk.Entry(input_frame, width=10)
     female_entry.grid(row=1, column=1)
@@ -31,7 +56,7 @@ if __name__ == '__main__':
     male_entry.grid(row=2, column=1)
 
     # Race inputs
-    ttk.Label(input_frame, text="Race Proportions:").grid(row=3, column=0, sticky="W")
+    ttk.Label(input_frame, text="Race Enrollment Rates:").grid(row=3, column=0, sticky="W")
     ttk.Label(input_frame, text="White:").grid(row=4, column=0, sticky="W")
     white_entry = ttk.Entry(input_frame, width=10)
     white_entry.grid(row=4, column=1)
@@ -48,18 +73,22 @@ if __name__ == '__main__':
     hispanic_entry = ttk.Entry(input_frame, width=10)
     hispanic_entry.grid(row=7, column=1)
 
-    # Total students and students to admit
-    ttk.Label(input_frame, text="Total Students in Simulated Data:").grid(row=8, column=0, sticky="W")
-    total_students_entry = ttk.Entry(input_frame, width=10)
-    total_students_entry.grid(row=8, column=1)
+    ttk.Label(input_frame, text="Other:").grid(row=8, column=0, sticky="W")
+    other_entry = ttk.Entry(input_frame, width=10)
+    other_entry.grid(row=8, column=1)
 
-    ttk.Label(input_frame, text="Number of Students to Admit:").grid(row=9, column=0, sticky="W")
+    # Total students and students to admit
+    ttk.Label(input_frame, text="Total Students in Simulated Data:").grid(row=9, column=0, sticky="W")
+    total_students_entry = ttk.Entry(input_frame, width=10)
+    total_students_entry.grid(row=9, column=1)
+
+    ttk.Label(input_frame, text="Number of Students to Admit:").grid(row=10, column=0, sticky="W")
     admit_students_entry = ttk.Entry(input_frame, width=10)
-    admit_students_entry.grid(row=9, column=1)
+    admit_students_entry.grid(row=10, column=1)
 
     # Calculate button
     calculate_button = ttk.Button(input_frame, text="Calculate Cohorts", command=calculate_cohorts)
-    calculate_button.grid(row=10, column=0, columnspan=2, pady=10)
+    calculate_button.grid(row=11, column=0, columnspan=2, pady=10)
 
     # Output frame
     output_frame = ttk.Frame(root, padding="10")
