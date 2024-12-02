@@ -5,7 +5,6 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 if __name__ == '__main__':
     def calculate_cohorts(modified=False):
-
         female_prop = float(female_entry.get())
         male_prop = float(male_entry.get())
         white_prop = float(white_entry.get())
@@ -17,16 +16,16 @@ if __name__ == '__main__':
         students_to_admit = int(admit_students_entry.get())
 
         gender_enrollment_rates = {
-            'Male':male_prop,
-            'Female':female_prop
+            'Male': male_prop,
+            'Female': female_prop
         }
 
         race_enrollment_rates = {
-            'White':white_prop,
-            'Black':black_prop,
-            'Asian':asian_prop,
-            'Hispanic':hispanic_prop,
-            'Other':other_prop
+            'White': white_prop,
+            'Black': black_prop,
+            'Asian': asian_prop,
+            'Hispanic': hispanic_prop,
+            'Other': other_prop
         }
 
         df = create_data(total_students)
@@ -37,85 +36,113 @@ if __name__ == '__main__':
             df2 = create_data2(total_students)
             df2 = enrollment_with_parity(df, df2, gender_enrollment_rates, race_enrollment_rates, students_to_admit)
             plot_parity(df2, plot_frame1, plot_frame2)
-        
-    
-    # GUI setup
+
+    # GUI setup with custom styling
     root = tk.Tk()
     root.title("Student Cohort Calculator")
+    root.configure(bg='#f0f0f0')
 
-    # Input frame
-    input_frame = ttk.Frame(root, padding="10")
-    input_frame.grid(row=0, column=0, sticky="W")
+    # Custom style configuration
+    style = ttk.Style()
+    style.configure('TFrame', background='#f0f0f0')
+    style.configure('TLabel', background='#f0f0f0', font=('Arial', 10))
+    style.configure('TButton', font=('Arial', 10, 'bold'))
+    style.configure('Header.TLabel', font=('Arial', 12, 'bold'))
 
-    # Gender inputs
-    ttk.Label(input_frame, text="Gender Enrollment Rates:").grid(row=0, column=0, sticky="W")
-    ttk.Label(input_frame, text="Female:").grid(row=1, column=0, sticky="W")
-    female_entry = ttk.Entry(input_frame, width=10)
-    female_entry.grid(row=1, column=1)
+    # Create main container that will hold both input and plot areas
+    main_container = ttk.Frame(root)
+    main_container.pack(fill="both", expand=True)
 
-    ttk.Label(input_frame, text="Male:").grid(row=2, column=0, sticky="W")
-    male_entry = ttk.Entry(input_frame, width=10)
-    male_entry.grid(row=2, column=1)
+    # Create left panel for inputs
+    left_panel = ttk.Frame(main_container)
+    left_panel.pack(side="left", fill="both", expand=False, padx=10)
 
-    # Race inputs
-    ttk.Label(input_frame, text="Race Enrollment Rates:").grid(row=3, column=0, sticky="W")
-    ttk.Label(input_frame, text="White:").grid(row=4, column=0, sticky="W")
-    white_entry = ttk.Entry(input_frame, width=10)
-    white_entry.grid(row=4, column=1)
+    # Create right panel for plots
+    right_panel = ttk.Frame(main_container)
+    right_panel.pack(side="right", fill="both", expand=True, padx=10)
 
-    ttk.Label(input_frame, text="Black:").grid(row=5, column=0, sticky="W")
-    black_entry = ttk.Entry(input_frame, width=10)
-    black_entry.grid(row=5, column=1)
+    # Input section (left panel)
+    # Title
+    title_label = ttk.Label(left_panel, text="Student Cohort Calculator", style='Header.TLabel')
+    title_label.pack(pady=(20, 20), padx=10, anchor="w")
 
-    ttk.Label(input_frame, text="Asian:").grid(row=6, column=0, sticky="W")
-    asian_entry = ttk.Entry(input_frame, width=10)
-    asian_entry.grid(row=6, column=1)
+    # Gender inputs section
+    gender_frame = ttk.LabelFrame(left_panel, text="Gender Enrollment Rates", padding=(10, 5))
+    gender_frame.pack(fill="x", padx=10, pady=5)
 
-    ttk.Label(input_frame, text="Hispanic:").grid(row=7, column=0, sticky="W")
-    hispanic_entry = ttk.Entry(input_frame, width=10)
-    hispanic_entry.grid(row=7, column=1)
+    for label_text, entry_var in [("Female:", "female_entry"), ("Male:", "male_entry")]:
+        frame = ttk.Frame(gender_frame)
+        frame.pack(fill="x", pady=2)
+        ttk.Label(frame, text=label_text).pack(side="left")
+        globals()[entry_var] = ttk.Entry(frame, width=15)
+        globals()[entry_var].pack(side="right", padx=5)
 
-    ttk.Label(input_frame, text="Other:").grid(row=8, column=0, sticky="W")
-    other_entry = ttk.Entry(input_frame, width=10)
-    other_entry.grid(row=8, column=1)
+    # Race inputs section
+    race_frame = ttk.LabelFrame(left_panel, text="Race Enrollment Rates", padding=(10, 5))
+    race_frame.pack(fill="x", padx=10, pady=5)
 
-    # Total students and students to admit
-    ttk.Label(input_frame, text="Total Students in Simulated Data:").grid(row=9, column=0, sticky="W")
-    total_students_entry = ttk.Entry(input_frame, width=10)
-    total_students_entry.grid(row=9, column=1)
+    race_entries = [
+        ("White:", "white_entry"),
+        ("Black:", "black_entry"),
+        ("Asian:", "asian_entry"),
+        ("Hispanic:", "hispanic_entry"),
+        ("Other:", "other_entry")
+    ]
 
-    ttk.Label(input_frame, text="Number of Students to Admit:").grid(row=10, column=0, sticky="W")
-    admit_students_entry = ttk.Entry(input_frame, width=10)
-    admit_students_entry.grid(row=10, column=1)
+    for label_text, entry_var in race_entries:
+        frame = ttk.Frame(race_frame)
+        frame.pack(fill="x", pady=2)
+        ttk.Label(frame, text=label_text).pack(side="left")
+        globals()[entry_var] = ttk.Entry(frame, width=15)
+        globals()[entry_var].pack(side="right", padx=5)
 
-    # Buttons for calculations
+    # Simulation parameters section
+    params_frame = ttk.LabelFrame(left_panel, text="Simulation Parameters", padding=(10, 5))
+    params_frame.pack(fill="x", padx=10, pady=5)
+
+    # Total students
+    total_frame = ttk.Frame(params_frame)
+    total_frame.pack(fill="x", pady=2)
+    ttk.Label(total_frame, text="Total Students:").pack(side="left")
+    total_students_entry = ttk.Entry(total_frame, width=15)
+    total_students_entry.pack(side="right", padx=5)
+
+    # Students to admit
+    admit_frame = ttk.Frame(params_frame)
+    admit_frame.pack(fill="x", pady=2)
+    ttk.Label(admit_frame, text="Students to Admit:").pack(side="left")
+    admit_students_entry = ttk.Entry(admit_frame, width=15)
+    admit_students_entry.pack(side="right", padx=5)
+
+    # Buttons
+    button_frame = ttk.Frame(left_panel)
+    button_frame.pack(pady=20, padx=10)
+
     calculate_unmodified_button = ttk.Button(
-        input_frame, text="Calculate (Unmodified)", command=lambda: calculate_cohorts(modified=False)
+        button_frame,
+        text="Calculate (Unmodified)",
+        command=lambda: calculate_cohorts(modified=False),
+        padding=(10, 5)
     )
-    calculate_unmodified_button.grid(row=11, column=0, pady=10)
+    calculate_unmodified_button.pack(side="left", padx=5)
 
     calculate_modified_button = ttk.Button(
-        input_frame, text="Calculate (Modified)", command=lambda: calculate_cohorts(modified=True)
+        button_frame,
+        text="Calculate (Modified)",
+        command=lambda: calculate_cohorts(modified=True),
+        padding=(10, 5)
     )
-    calculate_modified_button.grid(row=12, column=1, pady=10)
+    calculate_modified_button.pack(side="left", padx=5)
 
-    # Plot frame
-    plot_frame1 = ttk.Frame(root, padding="10")
-    plot_frame1.grid(row=1, column=0, sticky="W")
+    # Plot frames (right panel)
+    plot_frame1 = ttk.Frame(right_panel)
+    plot_frame1.pack(fill="both", expand=True, pady=10)
 
-    plot_frame2 = ttk.Frame(root, padding="10")
-    plot_frame2.grid(row=2, column=0, sticky="W")
+    plot_frame2 = ttk.Frame(right_panel)
+    plot_frame2.pack(fill="both", expand=True, pady=10)
 
-    # output_label = ttk.Label(output_frame, text="Results will appear here.", wraplength=400, justify="left")
-    # output_label.grid(row=0, column=0, sticky="W")
+    # Set a minimum window size
+    root.minsize(1000, 600)
 
     # Run the app
     root.mainloop()
-
-
-
-
-
-
-
-
