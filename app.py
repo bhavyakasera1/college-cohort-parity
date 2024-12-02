@@ -69,26 +69,41 @@ if __name__ == '__main__':
     female_frame = ttk.Frame(gender_frame)
     female_frame.pack(fill="x")
     ttk.Label(female_frame, text="Female:").pack(side="left")
-    female_value = ttk.Label(female_frame, text="0.50")
+    female_value = ttk.Label(female_frame, text="0.80")
     female_value.pack(side="right")
     female_slider = ttk.Scale(gender_frame, from_=0, to=1, orient="horizontal", 
                             command=lambda v: update_value_label(female_value, float(v)))
-    female_slider.set(0.5)
+    female_slider.set(0.8)
     female_slider.pack(fill="x", padx=5, pady=2)
 
     male_frame = ttk.Frame(gender_frame)
     male_frame.pack(fill="x")
     ttk.Label(male_frame, text="Male:").pack(side="left")
-    male_value = ttk.Label(male_frame, text="0.50")
+    male_value = ttk.Label(male_frame, text="0.90")
     male_value.pack(side="right")
     male_slider = ttk.Scale(gender_frame, from_=0, to=1, orient="horizontal",
                           command=lambda v: update_value_label(male_value, float(v)))
-    male_slider.set(0.5)
+    male_slider.set(0.9)
     male_slider.pack(fill="x", padx=5, pady=2)
 
     # Race sliders section
     race_frame = ttk.LabelFrame(left_panel, text="Race Enrollment Rates", padding=(10, 5))
     race_frame.pack(fill="x", padx=10, pady=5)
+
+    # Define sliders as global variables first
+    white_slider = None
+    black_slider = None
+    asian_slider = None
+    hispanic_prop_slider = None
+    other_slider = None
+
+    race_values = {
+        "white_slider": 0.9,
+        "black_slider": 0.7,
+        "asian_slider": 0.7,
+        "hispanic_prop_slider": 0.7,
+        "other_slider": 0.7
+    }
 
     race_sliders = []
     for label, var_name in [
@@ -101,15 +116,14 @@ if __name__ == '__main__':
         frame = ttk.Frame(race_frame)
         frame.pack(fill="x")
         ttk.Label(frame, text=label).pack(side="left")
-        value_label = ttk.Label(frame, text="0.20")
+        value_label = ttk.Label(frame, text=str(race_values[var_name]))
         value_label.pack(side="right")
         
-        slider = ttk.Scale(race_frame, from_=0, to=1, orient="horizontal",
+        globals()[var_name] = ttk.Scale(race_frame, from_=0, to=1, orient="horizontal",
                           command=lambda v, l=value_label: update_value_label(l, float(v)))
-        slider.set(0.2)
-        slider.pack(fill="x", padx=5, pady=2)
-        globals()[var_name] = slider
-        race_sliders.append(slider)
+        globals()[var_name].set(race_values[var_name])
+        globals()[var_name].pack(fill="x", padx=5, pady=2)
+        race_sliders.append(globals()[var_name])
 
     # Simulation parameters section
     params_frame = ttk.LabelFrame(left_panel, text="Simulation Parameters", padding=(10, 5))
