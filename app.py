@@ -31,11 +31,11 @@ if __name__ == '__main__':
         df = create_data(total_students)
         df = enrollment_without_parity(df, gender_enrollment_rates, race_enrollment_rates, students_to_admit)
         if not modified:
-            plot_parity(df, plot_frame1, plot_frame2)
+            plot_parity(df, plot_frame1, plot_frame2, parity_values)
         else:
             df2 = create_data2(total_students)
             df2 = enrollment_with_parity(df, df2, gender_enrollment_rates, race_enrollment_rates, students_to_admit)
-            plot_parity(df2, plot_frame1, plot_frame2)
+            plot_parity(df2, plot_frame1, plot_frame2, parity_values)
 
     def update_value_label(label, value):
         label.config(text=f"{value:.2f}")
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     total_value.pack(side="right")
     total_students_slider = ttk.Scale(params_frame, from_=100, to=10000, orient="horizontal",
                                     command=lambda v: total_value.config(text=str(int(float(v)))))
-    total_students_slider.set(1000)
+    total_students_slider.set(10000)
     total_students_slider.pack(fill="x", padx=5, pady=2)
 
     admit_frame = ttk.Frame(params_frame)
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     admit_value.pack(side="right")
     admit_students_slider = ttk.Scale(params_frame, from_=10, to=1000, orient="horizontal",
                                     command=lambda v: admit_value.config(text=str(int(float(v)))))
-    admit_students_slider.set(100)
+    admit_students_slider.set(1000)
     admit_students_slider.pack(fill="x", padx=5, pady=2)
 
     button_frame = ttk.Frame(left_panel)
@@ -173,6 +173,18 @@ if __name__ == '__main__':
 
     plot_frame2 = ttk.Frame(right_panel)
     plot_frame2.pack(fill="both", expand=True, pady=10)
+
+    # New parity display frame
+    parity_frame = ttk.Frame(right_panel)
+    parity_frame.pack(fill="both", pady=10)
+
+    # Add a label for parity display
+    parity_label = ttk.Label(parity_frame, text="Parity Values:")
+    parity_label.pack(anchor="w", padx=10)
+
+    # Add a text widget or labels for displaying specific parity values
+    parity_values = tk.Text(parity_frame, height=5, wrap="word", state="disabled")  # Use disabled to make it read-only
+    parity_values.pack(fill="both", expand=True, padx=10, pady=5)
 
     root.minsize(1000, 600)
     root.mainloop()

@@ -130,7 +130,7 @@ def bootstrap_enrollment_rates(df, group_column, num_iterations=100):
 
     return rates
 
-def plot_parity(df, plot_frame1, plot_frame2):
+def plot_parity(df, plot_frame1, plot_frame2, parity_field):
     # Calculate confidence intervals for gender enrollment rates
     cis = bootstrap_enrollment_rates(df, "gender")
     male_ci = cis["Male"]
@@ -154,7 +154,7 @@ def plot_parity(df, plot_frame1, plot_frame2):
     # Visualization for gender
     fig = plt.figure()
     ax1 = fig.add_subplot(211)
-    sns.barplot(data=enrollment_ci_gender_df, x='Gender', y='Enrollment Rate', color='blue', alpha=0.6, ci=None, ax=ax1)
+    sns.barplot(data=enrollment_ci_gender_df, x='Gender', y='Enrollment Rate', color='blue', alpha=0.6, errorbar=None, ax=ax1)
     ax1.errorbar(x=enrollment_ci_gender_df['Gender'], y=enrollment_ci_gender_df['Enrollment Rate'],
                 yerr=[enrollment_ci_gender_df['Enrollment Rate'] - enrollment_ci_gender_df['Lower CI'],
                         enrollment_ci_gender_df['Upper CI'] - enrollment_ci_gender_df['Enrollment Rate']],
@@ -167,7 +167,7 @@ def plot_parity(df, plot_frame1, plot_frame2):
     # plt.show()
 
     # Output the enrollment parity for gender
-    print(f'Enrollment Parity (Male/Female): {enrollment_parity_gender:.2f}')
+    # print(f'Enrollment Parity (Male/Female): {enrollment_parity_gender:.2f}')
 
     # Calculate confidence intervals for racial groups enrollment rates
     racial_rates = bootstrap_enrollment_rates(df, "race")
@@ -193,7 +193,7 @@ def plot_parity(df, plot_frame1, plot_frame2):
 
     # Visualization for racial groups
     ax2 = fig.add_subplot(212)
-    sns.barplot(data=enrollment_ci_race_df, x='Race', y='Enrollment Rate', color='blue', alpha=0.6, ci=None, ax=ax2)
+    sns.barplot(data=enrollment_ci_race_df, x='Race', y='Enrollment Rate', color='blue', alpha=0.6, errorbar=None, ax=ax2)
     ax2.errorbar(x=enrollment_ci_race_df['Race'], y=enrollment_ci_race_df['Enrollment Rate'],
                 yerr=[enrollment_ci_race_df['Enrollment Rate'] - enrollment_ci_race_df['Lower CI'],
                         enrollment_ci_race_df['Upper CI'] - enrollment_ci_race_df['Enrollment Rate']],
@@ -228,10 +228,15 @@ def plot_parity(df, plot_frame1, plot_frame2):
     average_parity = np.mean(parity_values) if parity_values else None
 
     # Output the average enrollment parity
-    if average_parity is not None:
-        print(f'Average Enrollment Parity (Non-White vs White): {average_parity:.2f}')
-    else:
-        print('No non-White groups to calculate average enrollment parity.')
+    # if average_parity is not None:
+        # print(f'Average Enrollment Parity (Non-White vs White): {average_parity:.2f}')
+    # else:
+    #     print('No non-White groups to calculate average enrollment parity.')
+    
+    parity_field.config(state="normal")  # Enable editing
+    parity_field.delete(1.0, tk.END)  # Clear existing content
+    parity_field.insert(tk.END, f"Enrollment Parity (Male/Female): {enrollment_parity_gender:.2f}\nAverage Enrollment Parity (Non-White vs White): {average_parity:.2f}")  # Add new values
+    parity_field.config(state="disabled")  # Make read-only again
 
 def bootstrap_for_parity(admitted_students):
 
