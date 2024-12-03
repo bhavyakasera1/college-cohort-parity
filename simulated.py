@@ -15,6 +15,8 @@ RACE_RATIOS = {
         'Other': 1 - 0.5784 - 0.1205 - 0.0592 - 0.1873
     }
 
+np.random.seed(50)
+
 def create_data(num_students):
     # Generate the race column based on the defined ratios
     race_population = np.random.choice(
